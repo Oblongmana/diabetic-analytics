@@ -1,0 +1,24 @@
+<strong><i class="fa fa-table"></i> Import Data</strong>
+<hr>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4>Import Data</h4>
+      </div>
+      <div class="panel-body">
+        <p><em>This file will remain private, and will not be uploaded to any servers, or in any way transmitted. Source code can be inspected on the <a href="https://github.com/Oblongmana/diabetic-analytics">Github Repository</a></em></p>
+        <p>
+          <label class="btn btn-default" for="csvFileSelector">
+              <input id="csvFileSelector" onchange='$("#csvFileSelectorInfo").html($(this)[0].files[0].name);' type="file" ng-model="csvToImport" style="display:none;">
+              Choose CSV File
+          </label>
+          <span class='label label-info' id="csvFileSelectorInfo"></span>
+        </p>
+        <p><button class="btn btn-default" type="button" ng-click="loadData()">Test Import</button></p>
+        <p ng-cloak="true" ng-show="debug_lineOneBglDump">{{debug_lineOneBglDump}}</p>
+      </div>
+    </div>
+  </div>
+</div>
