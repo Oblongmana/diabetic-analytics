@@ -63,7 +63,7 @@ gulp.task('fonts', function () {
         .pipe(gulp.dest('./dist/fonts'));
 });
 
-var htmlSources = ['./views'];
+var htmlSources = ['./views/*'];
 gulp.task('views', function () {
     return gulp.src(htmlSources)
         .pipe(watch(htmlSources,{verbose:true}))
