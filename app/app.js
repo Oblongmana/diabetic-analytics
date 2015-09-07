@@ -55,12 +55,12 @@
       // Actual Routing
       $stateProvider.state('import', {
         url: '/import/',
-        templateUrl: '../views/import.html',
+        templateUrl: './views/import.html',
         controller: 'csvImportController'
       });
       $stateProvider.state('average-bgl-auct', {
         url: '/average-bgl-auct/',
-        templateUrl: '../views/average-bgl-auct.html',
+        templateUrl: './views/average-bgl-auct.html',
         controller: 'averageBglAUCtController'
       });
     }
