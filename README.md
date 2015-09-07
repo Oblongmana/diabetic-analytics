@@ -1,3 +1,5 @@
+http://jameshill.io/diabetic-analytics/
+
 Except as noted in LICENSE, this app is Copyright 2015 James Hill
 
 In future, I'll probably update this to something more permissive. If you want
