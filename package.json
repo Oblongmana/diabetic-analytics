@@ -1,0 +1,117 @@
+{
+  "name": "diabetic-analytics",
+  "version": "0.1.0",
+  "description": "Analytics for Diabetics!",
+  "main": "app/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "napa"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Oblongmana/diabetic-analytics.git"
+  },
+  "keywords": [
+    "diabetes",
+    "analytics",
+    "diabetic"
+  ],
+  "author": "James Hill",
+  "license": "Copyright 2015 James Hill",
+  "bugs": {
+    "url": "https://github.com/Oblongmana/diabetic-analytics/issues"
+  },
+  "homepage": "https://github.com/Oblongmana/diabetic-analytics#readme",
+  "//": [
+    "COMMENTS - PLEASE READ IF DOING ANYTHING IN PACKAGE.JSON",
+    "",
+    "Note that the flot lib appears to not be very actively maintained, and the ",
+    " package.json is out of date - hence we have specified the repo and tag",
+    "",
+    "See https://github.com/thlorenz/browserify-shim/wiki/browserify-shim-recipes",
+    " for further browserify recipes",
+    "",
+    "napa is used for installing things with no package.json, and these are then",
+    " shimmed in",
+    "",
+    "With jquery in non browserify use attaching both jQuery and $ to window,",
+    " other libs expect BOTH and behave badly. browserify-shim doesn't allow ",
+    " sensible multiple exports, so jquery is manually added to browser in the ",
+    " browser section below. This is HORRIBLE to get working :/ ",
+    "",
+    "Note that angular-flot must be included in 'browser', as not CommonJS",
+    " compatible, likewise for angular-file"
+  ],
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browser": {
+    "jquery": "./node_modules/jquery/dist/jquery.min.js",
+    "angular-file": "./node_modules/angular-file/src/angular-file.js",
+    "angular-flot": "./node_modules/angular-flot/angular-flot.js"
+  },
+  "browserify-shim": {
+    "jquery": "$",
+    "bootstrap": {
+      "depends": [
+        "jquery:$"
+      ]
+    },
+    "flot": {
+      "depends": [
+        "jquery:$"
+      ],
+      "exports": "flot"
+    },
+    "papaparse": {
+      "depends": [
+        "jquery:$"
+      ]
+    },
+    "angular-flot": {
+      "depends": [
+        "jquery:$",
+        "angular"
+      ],
+      "exports": "angular.module('angular-flot').name"
+    },
+    "angular-file": {
+      "depends": [
+        "angular"
+      ],
+      "exports": "angular.module('ur.file').name"
+    }
+  },
+  "dependencies": {
+    "angular": "^1.4.5",
+    "angular-flot": "0.0.10",
+    "angular-resource": "^1.4.5",
+    "angular-ui-router": "^0.2.15",
+    "bootstrap": "^3.3.5",
+    "flot": "flot/flot#v0.8.3",
+    "font-awesome": "^4.4.0",
+    "jquery": "^2.1.4",
+    "papaparse": "^4.1.2"
+  },
+  "napa": {
+    "angular-file": "git+https://github.com/radify/angular-file#v0.1.1"
+  },
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "browserify-shim": "^3.8.10",
+    "gulp": "^3.9.0",
+    "gulp-continuous-concat": "^0.1.1",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-util": "^3.0.6",
+    "gulp-watch": "^4.3.5",
+    "lodash": "^3.10.1",
+    "lodash.assign": "^3.2.0",
+    "napa": "^1.2.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.4.0"
+  }
+}
