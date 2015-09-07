@@ -1,0 +1,11 @@
+#OSX-specific exclusions
+.[dD][sS]_[sS]tore
+
+#Sublime nature exclusions
+*.sublime-workspace
+*.sublime-project
+*.sublime-settings
+
+#Misc exclusions
+*.sh
+node_modules/
