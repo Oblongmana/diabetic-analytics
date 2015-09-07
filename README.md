@@ -2,7 +2,7 @@ Except as noted in LICENSE, this app is Copyright 2015 James Hill
 
 In future, I'll probably update this to something more permissive. If you want
 me to do that sooner rather than later, please let me know either in the issues
-at github.com/Oblongmana/diabetic-analytics, or email me at me@jameshill.io
+at https://github.com/Oblongmana/diabetic-analytics, or email me at me@jameshill.io
 
 Note that this app uses a Bootply template - see LICENSE for information on obtaining a copy of the original if you're after it. Can be previewed at http://www.bootply.com/render/85850
 
