@@ -61,7 +61,7 @@
       $stateProvider.state('average-bgl-auct', {
         url: '/average-bgl-auct/',
         templateUrl: '../views/average-bgl-auct.html',
-        // controller: 'csvImportController'
+        controller: 'averageBglAUCtController'
       });
     }
   ]);

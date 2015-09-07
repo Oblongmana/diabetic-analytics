@@ -1,1 +1,2 @@
 require('./csvImportController');
+require('./averageBglAUCtController');

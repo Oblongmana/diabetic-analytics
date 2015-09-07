@@ -2,6 +2,7 @@
   'use strict';
 
   var angular = require('angular');
+  var _ = require('lodash');
   var papaparse = require('papaparse');
 
   /**
@@ -34,7 +35,8 @@
    *
    * Each strategy also exposes a "columnMappings" field. This is a mapping from
    * the data fields that the DiabeticAnalytics app requires, to the equivalent
-   * in the imported data. 
+   * in the imported data. This is for users of the ParsingService to use - the
+   * service itself may in fact manipulate the data to force it to conform
    *
    * TODO: Somehow document these required fields/maybe enforce them? Probably
    * don't need to enforce though
@@ -126,11 +128,33 @@
               fastMode: undefined,
               beforeFirstChunk: undefined,
               columnMappings: {
-                BGL_mmol_L: 3
+                DateTime: 0,
+                BGL_mmol_L: 2
               }
             },
             undefined,
-            undefined
+            function(resultObject) {
+              //This post-parse function merges the contents of the 
+              // "Date" and "Time" fields into "DateTime" - containing a string
+              // that can be parsed as a js date
+              var srcDateIndex = 0;
+              var srcTimeIndex = 1;
+              var outDateTimeIndex = 0;
+
+              var headers = _(resultObject.data).take(1).flatten().value();
+              _.pullAt(headers,srcDateIndex,srcTimeIndex); //Remove date & time headers
+              _.insert(headers,outDateTimeIndex,"DateTime"); //Add DateTime header at outDateTimeIndex
+
+              // resultObject.data = resultObject.data[0] + 
+              var data = _(resultObject.data).drop(1).map(function(dataRow) {
+                var dateTimeStr = "\""+_(dataRow).pullAt(srcDateIndex,srcTimeIndex).join(" ")+"\"";
+                _.insert(dataRow,outDateTimeIndex,dateTimeStr); //Add DateTime value at outDateTimeIndex
+                return dataRow;
+              }).value();
+
+              resultObject.data = [headers].concat(data);
+              return resultObject;
+            }
           );
         }
       };

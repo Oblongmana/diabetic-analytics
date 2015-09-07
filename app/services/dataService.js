@@ -17,7 +17,7 @@
           var mySugrColumnMappings = mySugrParser.config.columnMappings;
           var pMySugrParse = mySugrParser.parse(csvFile);
           return pMySugrParse.then(function(result){
-            return ('BGL (mmol/L): ' + result.data[1][mySugrColumnMappings.BGL_mmol_L]);
+            return ('BGL (mmol/L): ' + result.data[1][mySugrColumnMappings.DateTime] + '; ' +result.data[1][mySugrColumnMappings.BGL_mmol_L]);
           });
         }
       };
