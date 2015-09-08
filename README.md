@@ -14,3 +14,4 @@ Note that this app uses a Bootply template - see LICENSE for information on obta
  - Need to do a thorough pass for browser compat, and add fallbacks/nice errors for unsupported environments
  - font-awesome doesn't support IE7, has bugs with IE8
  - Timezone stuff may get messy. Will need to handle sensibly in post-parse functions. For example, mySugr appears to provide output in the user's timezone - that's _probably_ the browser timezone when you click "export", but will need to test to confirm - and take into account when importing into app. If that's the case, this one will be simple, as when we construct the date - it's constructed in User tz as mySugr doesn't supply tz data.
+ - Flot doesn't support IE9 without shimming - "For support for Internet Explorer < 9, you can use Excanvas, a canvas emulator;"
