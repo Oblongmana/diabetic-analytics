@@ -16,3 +16,4 @@ Note that this app uses a Bootply template - see LICENSE for information on obta
  - Timezone stuff may get messy. Will need to handle sensibly in post-parse functions. For example, mySugr appears to provide output in the user's timezone - that's _probably_ the browser timezone when you click "export", but will need to test to confirm - and take into account when importing into app. If that's the case, this one will be simple, as when we construct the date - it's constructed in User tz as mySugr doesn't supply tz data.
  - Flot doesn't support IE9 without shimming - "For support for Internet Explorer < 9, you can use Excanvas, a canvas emulator;"
  - Consider switching to d3 for charts
+ - Flot may have some accuracy issues with time series - I've had to do some strange things with tick minimum and intervals to get it displaying (POSSSIBLY) correctly (still not completely certain it's right, needs more testing)
