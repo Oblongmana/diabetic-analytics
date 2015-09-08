@@ -97,6 +97,16 @@
         return pPostParseTransform;
       };
 
+      /**
+       * This is the data that all parsers must supply, and expose access 
+       * information for under the `config.columnMappings` field
+       * @type {Object}
+       */
+      var REQUIRED_DATA = {
+        DateTime: 'DateTime',
+        BGL_mmol_L: 'BGL_mmol_L'
+      };
+
       var PARSERS = {
         /**
          * Config for the mySugr (https://mysugr.com/) app. This config setup
@@ -159,6 +169,9 @@
         }
       };
 
-      return PARSERS;    
+      return {
+        Parsers: PARSERS,
+        Fields: REQUIRED_DATA
+      };    
     }]);
 }());

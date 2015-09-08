@@ -156,6 +156,7 @@ require('./app.js');
   'use strict';
 
   var angular = require('angular');
+  var _ = require('lodash');
 
   angular.module('diabeticAnalytics').factory('DataService',
     [
@@ -165,20 +166,43 @@ require('./app.js');
       $q,
       ParsingService
       ) {
+
+      var importedDataResult = null;
+      var selectedParser = null;
+
       return {
         importData: function(csvFile) {
-          var mySugrParser = ParsingService.mySugr();
-          var mySugrColumnMappings = mySugrParser.config.columnMappings;
-          var pMySugrParse = mySugrParser.parse(csvFile);
+          //TODO: allow user to select the parser type in interface
+          selectedParser = ParsingService.Parsers.mySugr();
+          var pMySugrParse = selectedParser.parse(csvFile);
           return pMySugrParse.then(function(result){
-            return ('BGL (mmol/L): ' + result.data[1][mySugrColumnMappings.DateTime] + '; ' +result.data[1][mySugrColumnMappings.BGL_mmol_L]);
+            importedDataResult = result;
+            return ('BGL (mmol/L): ' + result.data[1][selectedParser.config.columnMappings.DateTime] + '; ' +result.data[1][selectedParser.config.columnMappings.BGL_mmol_L]);
           });
+        },
+        getBglEntries: function() {
+          var deferred = $q.defer();
+          if (!importedDataResult) {
+            deferred.reject('No data has been imported into the app yet. Please import data using the "Data Import" page');
+          } else {
+            var returnData = selectedParser.config.headers
+              ? importedDataResult.data
+              : _.drop(importedDataResult.data,1);
+
+            deferred.resolve(_.map(returnData,function(dataRow){
+              var retDataRow = {};
+              retDataRow[ParsingService.Fields.DateTime] = dataRow[selectedParser.config.columnMappings.DateTime];
+              retDataRow[ParsingService.Fields.BGL_mmol_L] = dataRow[selectedParser.config.columnMappings.BGL_mmol_L];
+              return retDataRow;
+            }));
+          }
+          return deferred.promise;
         }
       };
     }]);
 }());
 
-},{"angular":16}],8:[function(require,module,exports){
+},{"angular":16,"lodash":32}],8:[function(require,module,exports){
 require('./dataService.js');
 require('./parsingService.js');
 
@@ -282,6 +306,16 @@ require('./parsingService.js');
         return pPostParseTransform;
       };
 
+      /**
+       * This is the data that all parsers must supply, and expose access 
+       * information for under the `config.columnMappings` field
+       * @type {Object}
+       */
+      var REQUIRED_DATA = {
+        DateTime: 'DateTime',
+        BGL_mmol_L: 'BGL_mmol_L'
+      };
+
       var PARSERS = {
         /**
          * Config for the mySugr (https://mysugr.com/) app. This config setup
@@ -344,7 +378,10 @@ require('./parsingService.js');
         }
       };
 
-      return PARSERS;    
+      return {
+        Parsers: PARSERS,
+        Fields: REQUIRED_DATA
+      };    
     }]);
 }());
 
