@@ -69,7 +69,7 @@
 
 }());
 
-},{"./controllers":4,"./services":8,"angular":16,"angular-file":10,"angular-flot":11,"angular-resource":13,"angular-ui-router":14}],2:[function(require,module,exports){
+},{"./controllers":4,"./services":8,"angular":17,"angular-file":11,"angular-flot":12,"angular-resource":14,"angular-ui-router":15}],2:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -84,10 +84,13 @@
       DataService
       ) {
 
+      $scope.auctChart = [];
+      $scope.auctChartOptions = {};
+
     }]);
 }());
 
-},{"angular":16}],3:[function(require,module,exports){
+},{"angular":17}],3:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -123,7 +126,7 @@
     }]);
 }());
 
-},{"angular":16}],4:[function(require,module,exports){
+},{"angular":17}],4:[function(require,module,exports){
 require('./csvImportController');
 require('./averageBglAUCtController');
 
@@ -132,11 +135,12 @@ require('jquery');
 require('bootstrap');
 require('angular');
 require('flot');
+require('flot-resize');
 require('lodash');
 require('./mixins');
 require('./app.js');
 
-},{"./app.js":1,"./mixins":6,"angular":16,"bootstrap":17,"flot":30,"jquery":31,"lodash":32}],6:[function(require,module,exports){
+},{"./app.js":1,"./mixins":6,"angular":17,"bootstrap":18,"flot":31,"flot-resize":10,"jquery":32,"lodash":33}],6:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -151,7 +155,7 @@ require('./app.js');
   
 }());
 
-},{"lodash":32}],7:[function(require,module,exports){
+},{"lodash":33}],7:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -202,7 +206,7 @@ require('./app.js');
     }]);
 }());
 
-},{"angular":16,"lodash":32}],8:[function(require,module,exports){
+},{"angular":17,"lodash":33}],8:[function(require,module,exports){
 require('./dataService.js');
 require('./parsingService.js');
 
@@ -385,7 +389,77 @@ require('./parsingService.js');
     }]);
 }());
 
-},{"angular":16,"lodash":32,"papaparse":33}],10:[function(require,module,exports){
+},{"angular":17,"lodash":33,"papaparse":34}],10:[function(require,module,exports){
+(function (global){
+
+; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
+require("flot");
+; var __browserify_shim_require__=require;(function browserifyShim(module, define, require) {
+/* Flot plugin for automatically redrawing plots as the placeholder resizes.
+
+Copyright (c) 2007-2014 IOLA and Ole Laursen.
+Licensed under the MIT license.
+
+It works by listening for changes on the placeholder div (through the jQuery
+resize event plugin) - if the size changes, it will redraw the plot.
+
+There are no options. If you need to disable the plugin for some plots, you
+can just fix the size of their placeholders.
+
+*/
+
+/* Inline dependency:
+ * jQuery resize event - v1.1 - 3/14/2010
+ * http://benalman.com/projects/jquery-resize-plugin/
+ *
+ * Copyright (c) 2010 "Cowboy" Ben Alman
+ * Dual licensed under the MIT and GPL licenses.
+ * http://benalman.com/about/license/
+ */
+(function($,e,t){"$:nomunge";var i=[],n=$.resize=$.extend($.resize,{}),a,r=false,s="setTimeout",u="resize",m=u+"-special-event",o="pendingDelay",l="activeDelay",f="throttleWindow";n[o]=200;n[l]=20;n[f]=true;$.event.special[u]={setup:function(){if(!n[f]&&this[s]){return false}var e=$(this);i.push(this);e.data(m,{w:e.width(),h:e.height()});if(i.length===1){a=t;h()}},teardown:function(){if(!n[f]&&this[s]){return false}var e=$(this);for(var t=i.length-1;t>=0;t--){if(i[t]==this){i.splice(t,1);break}}e.removeData(m);if(!i.length){if(r){cancelAnimationFrame(a)}else{clearTimeout(a)}a=null}},add:function(e){if(!n[f]&&this[s]){return false}var i;function a(e,n,a){var r=$(this),s=r.data(m)||{};s.w=n!==t?n:r.width();s.h=a!==t?a:r.height();i.apply(this,arguments)}if($.isFunction(e)){i=e;return a}else{i=e.handler;e.handler=a}}};function h(t){if(r===true){r=t||1}for(var s=i.length-1;s>=0;s--){var l=$(i[s]);if(l[0]==e||l.is(":visible")){var f=l.width(),c=l.height(),d=l.data(m);if(d&&(f!==d.w||c!==d.h)){l.trigger(u,[d.w=f,d.h=c]);r=t||true}}else{d=l.data(m);d.w=0;d.h=0}}if(a!==null){if(r&&(t==null||t-r<1e3)){a=e.requestAnimationFrame(h)}else{a=setTimeout(h,n[o]);r=false}}}if(!e.requestAnimationFrame){e.requestAnimationFrame=function(){return e.webkitRequestAnimationFrame||e.mozRequestAnimationFrame||e.oRequestAnimationFrame||e.msRequestAnimationFrame||function(t,i){return e.setTimeout(function(){t((new Date).getTime())},n[l])}}()}if(!e.cancelAnimationFrame){e.cancelAnimationFrame=function(){return e.webkitCancelRequestAnimationFrame||e.mozCancelRequestAnimationFrame||e.oCancelRequestAnimationFrame||e.msCancelRequestAnimationFrame||clearTimeout}()}})(jQuery,this);
+
+(function ($) {
+    var options = { }; // no options
+
+    function init(plot) {
+        function onResize() {
+            var placeholder = plot.getPlaceholder();
+
+            // somebody might have hidden us and we can't plot
+            // when we don't have the dimensions
+            if (placeholder.width() == 0 || placeholder.height() == 0)
+                return;
+
+            plot.resize();
+            plot.setupGrid();
+            plot.draw();
+        }
+        
+        function bindEvents(plot, eventHolder) {
+            plot.getPlaceholder().resize(onResize);
+        }
+
+        function shutdown(plot, eventHolder) {
+            plot.getPlaceholder().unbind("resize", onResize);
+        }
+        
+        plot.hooks.bindEvents.push(bindEvents);
+        plot.hooks.shutdown.push(shutdown);
+    }
+    
+    $.plot.plugins.push({
+        init: init,
+        options: options,
+        name: 'resize',
+        version: '1.0'
+    });
+})(jQuery);
+
+}).call(global, module, undefined, undefined);
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":32,"flot":31}],11:[function(require,module,exports){
 (function (global){
 
 ; require("angular");
@@ -738,7 +812,7 @@ angular.module('ur.file', []).config(['$provide', function($provide) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"angular":16}],11:[function(require,module,exports){
+},{"angular":17}],12:[function(require,module,exports){
 (function (global){
 
 ; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
@@ -867,7 +941,7 @@ angular.module('angular-flot', []).directive('flot', function () {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":31,"angular":16}],12:[function(require,module,exports){
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":32,"angular":17}],13:[function(require,module,exports){
 /**
  * @license AngularJS v1.4.5
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -1544,11 +1618,11 @@ angular.module('ngResource', ['ng']).
 
 })(window, window.angular);
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 require('./angular-resource');
 module.exports = 'ngResource';
 
-},{"./angular-resource":12}],14:[function(require,module,exports){
+},{"./angular-resource":13}],15:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.2.15
@@ -5919,7 +5993,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * @license AngularJS v1.4.5
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -34608,11 +34682,11 @@ $provide.value("$locale", {
 })(window, document);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":15}],17:[function(require,module,exports){
+},{"./angular":16}],18:[function(require,module,exports){
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
 require('../../js/transition.js')
 require('../../js/alert.js')
@@ -34626,7 +34700,7 @@ require('../../js/popover.js')
 require('../../js/scrollspy.js')
 require('../../js/tab.js')
 require('../../js/affix.js')
-},{"../../js/affix.js":18,"../../js/alert.js":19,"../../js/button.js":20,"../../js/carousel.js":21,"../../js/collapse.js":22,"../../js/dropdown.js":23,"../../js/modal.js":24,"../../js/popover.js":25,"../../js/scrollspy.js":26,"../../js/tab.js":27,"../../js/tooltip.js":28,"../../js/transition.js":29}],18:[function(require,module,exports){
+},{"../../js/affix.js":19,"../../js/alert.js":20,"../../js/button.js":21,"../../js/carousel.js":22,"../../js/collapse.js":23,"../../js/dropdown.js":24,"../../js/modal.js":25,"../../js/popover.js":26,"../../js/scrollspy.js":27,"../../js/tab.js":28,"../../js/tooltip.js":29,"../../js/transition.js":30}],19:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: affix.js v3.3.5
  * http://getbootstrap.com/javascript/#affix
@@ -34790,7 +34864,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: alert.js v3.3.5
  * http://getbootstrap.com/javascript/#alerts
@@ -34886,7 +34960,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: button.js v3.3.5
  * http://getbootstrap.com/javascript/#buttons
@@ -35008,7 +35082,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.5
  * http://getbootstrap.com/javascript/#carousel
@@ -35247,7 +35321,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.5
  * http://getbootstrap.com/javascript/#collapse
@@ -35460,7 +35534,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.5
  * http://getbootstrap.com/javascript/#dropdowns
@@ -35627,7 +35701,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: modal.js v3.3.5
  * http://getbootstrap.com/javascript/#modals
@@ -35966,7 +36040,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: popover.js v3.3.5
  * http://getbootstrap.com/javascript/#popovers
@@ -36076,7 +36150,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: scrollspy.js v3.3.5
  * http://getbootstrap.com/javascript/#scrollspy
@@ -36250,7 +36324,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tab.js v3.3.5
  * http://getbootstrap.com/javascript/#tabs
@@ -36407,7 +36481,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.5
  * http://getbootstrap.com/javascript/#tooltip
@@ -36923,7 +36997,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: transition.js v3.3.5
  * http://getbootstrap.com/javascript/#transitions
@@ -36984,7 +37058,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /* Javascript plotting library for jQuery, version 0.8.3.
 
 Copyright (c) 2007-2014 IOLA and Ole Laursen.
@@ -40154,7 +40228,7 @@ Licensed under the MIT license.
 
 })(jQuery);
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){
 ; var __browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
 /*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */
@@ -40168,7 +40242,7 @@ void 0===c?d&&"get"in d&&null!==(e=d.get(a,b))?e:(e=n.find.attr(a,b),null==e?voi
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -52524,7 +52598,7 @@ void 0===c?d&&"get"in d&&null!==(e=d.get(a,b))?e:(e=n.find.attr(a,b),null==e?voi
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
 	Papa Parse
 	v4.1.2

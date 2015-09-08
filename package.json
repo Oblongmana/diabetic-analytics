@@ -50,7 +50,8 @@
   "browser": {
     "jquery": "./node_modules/jquery/dist/jquery.min.js",
     "angular-file": "./node_modules/angular-file/src/angular-file.js",
-    "angular-flot": "./node_modules/angular-flot/angular-flot.js"
+    "angular-flot": "./node_modules/angular-flot/angular-flot.js",
+    "flot-resize": "./node_modules/Flot/jquery.flot.resize.js"
   },
   "browserify-shim": {
     "jquery": "$",
@@ -64,6 +65,12 @@
         "jquery:$"
       ],
       "exports": "flot"
+    },
+    "flot-resize": {
+      "depends": [
+        "jquery:$",
+        "flot"
+      ]
     },
     "papaparse": {
       "depends": [

@@ -12,5 +12,8 @@
       DataService
       ) {
 
+      $scope.auctChart = [];
+      $scope.auctChartOptions = {};
+
     }]);
 }());
