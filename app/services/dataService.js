@@ -17,6 +17,7 @@
       var selectedParser = null;
 
       return {
+        Fields: ParsingService.Fields,
         importData: function(csvFile) {
           //TODO: allow user to select the parser type in interface
           selectedParser = ParsingService.Parsers.mySugr();
@@ -25,6 +26,9 @@
             importedDataResult = result;
             return ('BGL (mmol/L): ' + result.data[1][selectedParser.config.columnMappings.DateTime] + '; ' +result.data[1][selectedParser.config.columnMappings.BGL_mmol_L]);
           });
+        },
+        hasData: function() {
+          return importedDataResult !== undefined && importedDataResult !== null;
         },
         getBglEntries: function() {
           var deferred = $q.defer();

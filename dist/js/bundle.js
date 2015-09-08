@@ -69,11 +69,12 @@
 
 }());
 
-},{"./controllers":4,"./services":8,"angular":17,"angular-file":11,"angular-flot":12,"angular-resource":14,"angular-ui-router":15}],2:[function(require,module,exports){
+},{"./controllers":4,"./services":8,"angular":18,"angular-file":12,"angular-flot":13,"angular-resource":15,"angular-ui-router":16}],2:[function(require,module,exports){
 (function () {
   'use strict';
 
   var angular = require('angular');
+  var _ = require('lodash');
 
   angular.module('diabeticAnalytics').controller('averageBglAUCtController',
     [
@@ -84,13 +85,94 @@
       DataService
       ) {
 
-      $scope.auctChart = [];
-      $scope.auctChartOptions = {};
+      $scope.chartReady = false;
 
+      $scope.auctChartData = null;
+      $scope.auctChartOptions = null;
+      $scope.bglAreaDataSeries = null;
+
+      $scope.bglEntries = null;
+      $scope.bglEntriesRetrievalError = null;
+
+      var resetState = function() {
+        $scope.auctChartData = null;
+        $scope.auctChartOptions = null;
+        $scope.bglAreaDataSeries = null;
+
+        $scope.bglEntries = null;
+        $scope.bglEntriesRetrievalError = null;
+      };
+
+      var populateChart = function() {
+        if ($scope.bglEntries) {
+          $scope.bglAreaDataSeries = { 
+            // data: [[(new Date()).getTime(),5]],
+            data: _($scope.bglEntries)
+              .filter(function(bglEntry){
+                return bglEntry[DataService.Fields.BGL_mmol_L] !== "";
+              })
+              .map(function(bglEntry){
+                return [
+                  Date.parse(bglEntry[DataService.Fields.DateTime]),
+                  bglEntry[DataService.Fields.BGL_mmol_L]
+                ];
+              })
+              .value(),
+            label: 'BGL (mmol/L)',
+            lines: {
+              show: true,
+              fill: true
+            },
+            points: {
+              show: true
+            }
+          };
+          $scope.auctChartData = [$scope.bglAreaDataSeries];
+          $scope.auctChartOptions = {
+            legend: {
+              container: '#legend',
+              show: true
+            },
+            axisLabels: {
+                show: true
+            },
+            xaxes: [{
+                axisLabel: 'Time',
+                mode: "time",
+                timeformat: "%d/%m",
+                tickSize: [1,"day"],
+                labelHeight: 35 //Magic number, to shunt axis-label clear of tick labels
+            }],
+            yaxes: [{
+                position: 'left',
+                axisLabel: 'BGL (mmol/L)'
+            }]
+          };
+
+          $scope.chartReady = true;
+        } else {
+          $scope.chartReady = true;
+        }
+      };
+
+      if (DataService.hasData()) {
+        DataService.getBglEntries().then(
+          function(bglEntries){
+            $scope.bglEntries = bglEntries;
+            $scope.bglEntriesRetrievalError = null;
+
+            populateChart();
+          },
+          function(error){
+            resetState();
+            $scope.bglEntriesRetrievalError = error;
+          }
+        );
+      }
     }]);
 }());
 
-},{"angular":17}],3:[function(require,module,exports){
+},{"angular":18,"lodash":35}],3:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -126,7 +208,7 @@
     }]);
 }());
 
-},{"angular":17}],4:[function(require,module,exports){
+},{"angular":18}],4:[function(require,module,exports){
 require('./csvImportController');
 require('./averageBglAUCtController');
 
@@ -136,11 +218,13 @@ require('bootstrap');
 require('angular');
 require('flot');
 require('flot-resize');
+require('flot-time');
+require('flot-axislabels');
 require('lodash');
 require('./mixins');
 require('./app.js');
 
-},{"./app.js":1,"./mixins":6,"angular":17,"bootstrap":18,"flot":31,"flot-resize":10,"jquery":32,"lodash":33}],6:[function(require,module,exports){
+},{"./app.js":1,"./mixins":6,"angular":18,"bootstrap":19,"flot":33,"flot-axislabels":32,"flot-resize":10,"flot-time":11,"jquery":34,"lodash":35}],6:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -155,7 +239,7 @@ require('./app.js');
   
 }());
 
-},{"lodash":33}],7:[function(require,module,exports){
+},{"lodash":35}],7:[function(require,module,exports){
 (function () {
   'use strict';
 
@@ -175,6 +259,7 @@ require('./app.js');
       var selectedParser = null;
 
       return {
+        Fields: ParsingService.Fields,
         importData: function(csvFile) {
           //TODO: allow user to select the parser type in interface
           selectedParser = ParsingService.Parsers.mySugr();
@@ -183,6 +268,9 @@ require('./app.js');
             importedDataResult = result;
             return ('BGL (mmol/L): ' + result.data[1][selectedParser.config.columnMappings.DateTime] + '; ' +result.data[1][selectedParser.config.columnMappings.BGL_mmol_L]);
           });
+        },
+        hasData: function() {
+          return importedDataResult !== undefined && importedDataResult !== null;
         },
         getBglEntries: function() {
           var deferred = $q.defer();
@@ -206,7 +294,7 @@ require('./app.js');
     }]);
 }());
 
-},{"angular":17,"lodash":33}],8:[function(require,module,exports){
+},{"angular":18,"lodash":35}],8:[function(require,module,exports){
 require('./dataService.js');
 require('./parsingService.js');
 
@@ -389,7 +477,7 @@ require('./parsingService.js');
     }]);
 }());
 
-},{"angular":17,"lodash":33,"papaparse":34}],10:[function(require,module,exports){
+},{"angular":18,"lodash":35,"papaparse":36}],10:[function(require,module,exports){
 (function (global){
 
 ; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
@@ -459,7 +547,450 @@ can just fix the size of their placeholders.
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":32,"flot":31}],11:[function(require,module,exports){
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":34,"flot":33}],11:[function(require,module,exports){
+(function (global){
+
+; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
+require("flot");
+; var __browserify_shim_require__=require;(function browserifyShim(module, define, require) {
+/* Pretty handling of time axes.
+
+Copyright (c) 2007-2014 IOLA and Ole Laursen.
+Licensed under the MIT license.
+
+Set axis.mode to "time" to enable. See the section "Time series data" in
+API.txt for details.
+
+*/
+
+(function($) {
+
+	var options = {
+		xaxis: {
+			timezone: null,		// "browser" for local to the client or timezone for timezone-js
+			timeformat: null,	// format string to use
+			twelveHourClock: false,	// 12 or 24 time in time mode
+			monthNames: null	// list of names of months
+		}
+	};
+
+	// round to nearby lower multiple of base
+
+	function floorInBase(n, base) {
+		return base * Math.floor(n / base);
+	}
+
+	// Returns a string with the date d formatted according to fmt.
+	// A subset of the Open Group's strftime format is supported.
+
+	function formatDate(d, fmt, monthNames, dayNames) {
+
+		if (typeof d.strftime == "function") {
+			return d.strftime(fmt);
+		}
+
+		var leftPad = function(n, pad) {
+			n = "" + n;
+			pad = "" + (pad == null ? "0" : pad);
+			return n.length == 1 ? pad + n : n;
+		};
+
+		var r = [];
+		var escape = false;
+		var hours = d.getHours();
+		var isAM = hours < 12;
+
+		if (monthNames == null) {
+			monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+		}
+
+		if (dayNames == null) {
+			dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+		}
+
+		var hours12;
+
+		if (hours > 12) {
+			hours12 = hours - 12;
+		} else if (hours == 0) {
+			hours12 = 12;
+		} else {
+			hours12 = hours;
+		}
+
+		for (var i = 0; i < fmt.length; ++i) {
+
+			var c = fmt.charAt(i);
+
+			if (escape) {
+				switch (c) {
+					case 'a': c = "" + dayNames[d.getDay()]; break;
+					case 'b': c = "" + monthNames[d.getMonth()]; break;
+					case 'd': c = leftPad(d.getDate()); break;
+					case 'e': c = leftPad(d.getDate(), " "); break;
+					case 'h':	// For back-compat with 0.7; remove in 1.0
+					case 'H': c = leftPad(hours); break;
+					case 'I': c = leftPad(hours12); break;
+					case 'l': c = leftPad(hours12, " "); break;
+					case 'm': c = leftPad(d.getMonth() + 1); break;
+					case 'M': c = leftPad(d.getMinutes()); break;
+					// quarters not in Open Group's strftime specification
+					case 'q':
+						c = "" + (Math.floor(d.getMonth() / 3) + 1); break;
+					case 'S': c = leftPad(d.getSeconds()); break;
+					case 'y': c = leftPad(d.getFullYear() % 100); break;
+					case 'Y': c = "" + d.getFullYear(); break;
+					case 'p': c = (isAM) ? ("" + "am") : ("" + "pm"); break;
+					case 'P': c = (isAM) ? ("" + "AM") : ("" + "PM"); break;
+					case 'w': c = "" + d.getDay(); break;
+				}
+				r.push(c);
+				escape = false;
+			} else {
+				if (c == "%") {
+					escape = true;
+				} else {
+					r.push(c);
+				}
+			}
+		}
+
+		return r.join("");
+	}
+
+	// To have a consistent view of time-based data independent of which time
+	// zone the client happens to be in we need a date-like object independent
+	// of time zones.  This is done through a wrapper that only calls the UTC
+	// versions of the accessor methods.
+
+	function makeUtcWrapper(d) {
+
+		function addProxyMethod(sourceObj, sourceMethod, targetObj, targetMethod) {
+			sourceObj[sourceMethod] = function() {
+				return targetObj[targetMethod].apply(targetObj, arguments);
+			};
+		};
+
+		var utc = {
+			date: d
+		};
+
+		// support strftime, if found
+
+		if (d.strftime != undefined) {
+			addProxyMethod(utc, "strftime", d, "strftime");
+		}
+
+		addProxyMethod(utc, "getTime", d, "getTime");
+		addProxyMethod(utc, "setTime", d, "setTime");
+
+		var props = ["Date", "Day", "FullYear", "Hours", "Milliseconds", "Minutes", "Month", "Seconds"];
+
+		for (var p = 0; p < props.length; p++) {
+			addProxyMethod(utc, "get" + props[p], d, "getUTC" + props[p]);
+			addProxyMethod(utc, "set" + props[p], d, "setUTC" + props[p]);
+		}
+
+		return utc;
+	};
+
+	// select time zone strategy.  This returns a date-like object tied to the
+	// desired timezone
+
+	function dateGenerator(ts, opts) {
+		if (opts.timezone == "browser") {
+			return new Date(ts);
+		} else if (!opts.timezone || opts.timezone == "utc") {
+			return makeUtcWrapper(new Date(ts));
+		} else if (typeof timezoneJS != "undefined" && typeof timezoneJS.Date != "undefined") {
+			var d = new timezoneJS.Date();
+			// timezone-js is fickle, so be sure to set the time zone before
+			// setting the time.
+			d.setTimezone(opts.timezone);
+			d.setTime(ts);
+			return d;
+		} else {
+			return makeUtcWrapper(new Date(ts));
+		}
+	}
+	
+	// map of app. size of time units in milliseconds
+
+	var timeUnitSize = {
+		"second": 1000,
+		"minute": 60 * 1000,
+		"hour": 60 * 60 * 1000,
+		"day": 24 * 60 * 60 * 1000,
+		"month": 30 * 24 * 60 * 60 * 1000,
+		"quarter": 3 * 30 * 24 * 60 * 60 * 1000,
+		"year": 365.2425 * 24 * 60 * 60 * 1000
+	};
+
+	// the allowed tick sizes, after 1 year we use
+	// an integer algorithm
+
+	var baseSpec = [
+		[1, "second"], [2, "second"], [5, "second"], [10, "second"],
+		[30, "second"], 
+		[1, "minute"], [2, "minute"], [5, "minute"], [10, "minute"],
+		[30, "minute"], 
+		[1, "hour"], [2, "hour"], [4, "hour"],
+		[8, "hour"], [12, "hour"],
+		[1, "day"], [2, "day"], [3, "day"],
+		[0.25, "month"], [0.5, "month"], [1, "month"],
+		[2, "month"]
+	];
+
+	// we don't know which variant(s) we'll need yet, but generating both is
+	// cheap
+
+	var specMonths = baseSpec.concat([[3, "month"], [6, "month"],
+		[1, "year"]]);
+	var specQuarters = baseSpec.concat([[1, "quarter"], [2, "quarter"],
+		[1, "year"]]);
+
+	function init(plot) {
+		plot.hooks.processOptions.push(function (plot, options) {
+			$.each(plot.getAxes(), function(axisName, axis) {
+
+				var opts = axis.options;
+
+				if (opts.mode == "time") {
+					axis.tickGenerator = function(axis) {
+
+						var ticks = [];
+						var d = dateGenerator(axis.min, opts);
+						var minSize = 0;
+
+						// make quarter use a possibility if quarters are
+						// mentioned in either of these options
+
+						var spec = (opts.tickSize && opts.tickSize[1] ===
+							"quarter") ||
+							(opts.minTickSize && opts.minTickSize[1] ===
+							"quarter") ? specQuarters : specMonths;
+
+						if (opts.minTickSize != null) {
+							if (typeof opts.tickSize == "number") {
+								minSize = opts.tickSize;
+							} else {
+								minSize = opts.minTickSize[0] * timeUnitSize[opts.minTickSize[1]];
+							}
+						}
+
+						for (var i = 0; i < spec.length - 1; ++i) {
+							if (axis.delta < (spec[i][0] * timeUnitSize[spec[i][1]]
+											  + spec[i + 1][0] * timeUnitSize[spec[i + 1][1]]) / 2
+								&& spec[i][0] * timeUnitSize[spec[i][1]] >= minSize) {
+								break;
+							}
+						}
+
+						var size = spec[i][0];
+						var unit = spec[i][1];
+
+						// special-case the possibility of several years
+
+						if (unit == "year") {
+
+							// if given a minTickSize in years, just use it,
+							// ensuring that it's an integer
+
+							if (opts.minTickSize != null && opts.minTickSize[1] == "year") {
+								size = Math.floor(opts.minTickSize[0]);
+							} else {
+
+								var magn = Math.pow(10, Math.floor(Math.log(axis.delta / timeUnitSize.year) / Math.LN10));
+								var norm = (axis.delta / timeUnitSize.year) / magn;
+
+								if (norm < 1.5) {
+									size = 1;
+								} else if (norm < 3) {
+									size = 2;
+								} else if (norm < 7.5) {
+									size = 5;
+								} else {
+									size = 10;
+								}
+
+								size *= magn;
+							}
+
+							// minimum size for years is 1
+
+							if (size < 1) {
+								size = 1;
+							}
+						}
+
+						axis.tickSize = opts.tickSize || [size, unit];
+						var tickSize = axis.tickSize[0];
+						unit = axis.tickSize[1];
+
+						var step = tickSize * timeUnitSize[unit];
+
+						if (unit == "second") {
+							d.setSeconds(floorInBase(d.getSeconds(), tickSize));
+						} else if (unit == "minute") {
+							d.setMinutes(floorInBase(d.getMinutes(), tickSize));
+						} else if (unit == "hour") {
+							d.setHours(floorInBase(d.getHours(), tickSize));
+						} else if (unit == "month") {
+							d.setMonth(floorInBase(d.getMonth(), tickSize));
+						} else if (unit == "quarter") {
+							d.setMonth(3 * floorInBase(d.getMonth() / 3,
+								tickSize));
+						} else if (unit == "year") {
+							d.setFullYear(floorInBase(d.getFullYear(), tickSize));
+						}
+
+						// reset smaller components
+
+						d.setMilliseconds(0);
+
+						if (step >= timeUnitSize.minute) {
+							d.setSeconds(0);
+						}
+						if (step >= timeUnitSize.hour) {
+							d.setMinutes(0);
+						}
+						if (step >= timeUnitSize.day) {
+							d.setHours(0);
+						}
+						if (step >= timeUnitSize.day * 4) {
+							d.setDate(1);
+						}
+						if (step >= timeUnitSize.month * 2) {
+							d.setMonth(floorInBase(d.getMonth(), 3));
+						}
+						if (step >= timeUnitSize.quarter * 2) {
+							d.setMonth(floorInBase(d.getMonth(), 6));
+						}
+						if (step >= timeUnitSize.year) {
+							d.setMonth(0);
+						}
+
+						var carry = 0;
+						var v = Number.NaN;
+						var prev;
+
+						do {
+
+							prev = v;
+							v = d.getTime();
+							ticks.push(v);
+
+							if (unit == "month" || unit == "quarter") {
+								if (tickSize < 1) {
+
+									// a bit complicated - we'll divide the
+									// month/quarter up but we need to take
+									// care of fractions so we don't end up in
+									// the middle of a day
+
+									d.setDate(1);
+									var start = d.getTime();
+									d.setMonth(d.getMonth() +
+										(unit == "quarter" ? 3 : 1));
+									var end = d.getTime();
+									d.setTime(v + carry * timeUnitSize.hour + (end - start) * tickSize);
+									carry = d.getHours();
+									d.setHours(0);
+								} else {
+									d.setMonth(d.getMonth() +
+										tickSize * (unit == "quarter" ? 3 : 1));
+								}
+							} else if (unit == "year") {
+								d.setFullYear(d.getFullYear() + tickSize);
+							} else {
+								d.setTime(v + step);
+							}
+						} while (v < axis.max && v != prev);
+
+						return ticks;
+					};
+
+					axis.tickFormatter = function (v, axis) {
+
+						var d = dateGenerator(v, axis.options);
+
+						// first check global format
+
+						if (opts.timeformat != null) {
+							return formatDate(d, opts.timeformat, opts.monthNames, opts.dayNames);
+						}
+
+						// possibly use quarters if quarters are mentioned in
+						// any of these places
+
+						var useQuarters = (axis.options.tickSize &&
+								axis.options.tickSize[1] == "quarter") ||
+							(axis.options.minTickSize &&
+								axis.options.minTickSize[1] == "quarter");
+
+						var t = axis.tickSize[0] * timeUnitSize[axis.tickSize[1]];
+						var span = axis.max - axis.min;
+						var suffix = (opts.twelveHourClock) ? " %p" : "";
+						var hourCode = (opts.twelveHourClock) ? "%I" : "%H";
+						var fmt;
+
+						if (t < timeUnitSize.minute) {
+							fmt = hourCode + ":%M:%S" + suffix;
+						} else if (t < timeUnitSize.day) {
+							if (span < 2 * timeUnitSize.day) {
+								fmt = hourCode + ":%M" + suffix;
+							} else {
+								fmt = "%b %d " + hourCode + ":%M" + suffix;
+							}
+						} else if (t < timeUnitSize.month) {
+							fmt = "%b %d";
+						} else if ((useQuarters && t < timeUnitSize.quarter) ||
+							(!useQuarters && t < timeUnitSize.year)) {
+							if (span < timeUnitSize.year) {
+								fmt = "%b";
+							} else {
+								fmt = "%b %Y";
+							}
+						} else if (useQuarters && t < timeUnitSize.year) {
+							if (span < timeUnitSize.year) {
+								fmt = "Q%q";
+							} else {
+								fmt = "Q%q %Y";
+							}
+						} else {
+							fmt = "%Y";
+						}
+
+						var rt = formatDate(d, fmt, opts.monthNames, opts.dayNames);
+
+						return rt;
+					};
+				}
+			});
+		});
+	}
+
+	$.plot.plugins.push({
+		init: init,
+		options: options,
+		name: 'time',
+		version: '1.0'
+	});
+
+	// Time-axis support used to be in Flot core, which exposed the
+	// formatDate function on the plot object.  Various plugins depend
+	// on the function, so we need to re-expose it here.
+
+	$.plot.formatDate = formatDate;
+	$.plot.dateGenerator = dateGenerator;
+
+})(jQuery);
+
+}).call(global, module, undefined, undefined);
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":34,"flot":33}],12:[function(require,module,exports){
 (function (global){
 
 ; require("angular");
@@ -812,7 +1343,7 @@ angular.module('ur.file', []).config(['$provide', function($provide) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"angular":17}],12:[function(require,module,exports){
+},{"angular":18}],13:[function(require,module,exports){
 (function (global){
 
 ; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
@@ -941,7 +1472,7 @@ angular.module('angular-flot', []).directive('flot', function () {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":32,"angular":17}],13:[function(require,module,exports){
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":34,"angular":18}],14:[function(require,module,exports){
 /**
  * @license AngularJS v1.4.5
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -1618,11 +2149,11 @@ angular.module('ngResource', ['ng']).
 
 })(window, window.angular);
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./angular-resource');
 module.exports = 'ngResource';
 
-},{"./angular-resource":13}],15:[function(require,module,exports){
+},{"./angular-resource":14}],16:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.2.15
@@ -5993,7 +6524,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * @license AngularJS v1.4.5
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -34682,11 +35213,11 @@ $provide.value("$locale", {
 })(window, document);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":16}],18:[function(require,module,exports){
+},{"./angular":17}],19:[function(require,module,exports){
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
 require('../../js/transition.js')
 require('../../js/alert.js')
@@ -34700,7 +35231,7 @@ require('../../js/popover.js')
 require('../../js/scrollspy.js')
 require('../../js/tab.js')
 require('../../js/affix.js')
-},{"../../js/affix.js":19,"../../js/alert.js":20,"../../js/button.js":21,"../../js/carousel.js":22,"../../js/collapse.js":23,"../../js/dropdown.js":24,"../../js/modal.js":25,"../../js/popover.js":26,"../../js/scrollspy.js":27,"../../js/tab.js":28,"../../js/tooltip.js":29,"../../js/transition.js":30}],19:[function(require,module,exports){
+},{"../../js/affix.js":20,"../../js/alert.js":21,"../../js/button.js":22,"../../js/carousel.js":23,"../../js/collapse.js":24,"../../js/dropdown.js":25,"../../js/modal.js":26,"../../js/popover.js":27,"../../js/scrollspy.js":28,"../../js/tab.js":29,"../../js/tooltip.js":30,"../../js/transition.js":31}],20:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: affix.js v3.3.5
  * http://getbootstrap.com/javascript/#affix
@@ -34864,7 +35395,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: alert.js v3.3.5
  * http://getbootstrap.com/javascript/#alerts
@@ -34960,7 +35491,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: button.js v3.3.5
  * http://getbootstrap.com/javascript/#buttons
@@ -35082,7 +35613,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.5
  * http://getbootstrap.com/javascript/#carousel
@@ -35321,7 +35852,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.5
  * http://getbootstrap.com/javascript/#collapse
@@ -35534,7 +36065,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.5
  * http://getbootstrap.com/javascript/#dropdowns
@@ -35701,7 +36232,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: modal.js v3.3.5
  * http://getbootstrap.com/javascript/#modals
@@ -36040,7 +36571,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: popover.js v3.3.5
  * http://getbootstrap.com/javascript/#popovers
@@ -36150,7 +36681,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: scrollspy.js v3.3.5
  * http://getbootstrap.com/javascript/#scrollspy
@@ -36324,7 +36855,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tab.js v3.3.5
  * http://getbootstrap.com/javascript/#tabs
@@ -36481,7 +37012,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.5
  * http://getbootstrap.com/javascript/#tooltip
@@ -36997,7 +37528,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: transition.js v3.3.5
  * http://getbootstrap.com/javascript/#transitions
@@ -37058,7 +37589,484 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
+(function (global){
+
+; $ = global.$ = require("/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js");
+require("flot");
+; var __browserify_shim_require__=require;(function browserifyShim(module, define, require) {
+/*
+Axis Labels Plugin for flot.
+http://github.com/markrcote/flot-axislabels
+
+Original code is Copyright (c) 2010 Xuan Luo.
+Original code was released under the GPLv3 license by Xuan Luo, September 2010.
+Original code was rereleased under the MIT license by Xuan Luo, April 2012.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+(function ($) {
+    var options = {
+      axisLabels: {
+        show: true
+      }
+    };
+
+    function canvasSupported() {
+        return !!document.createElement('canvas').getContext;
+    }
+
+    function canvasTextSupported() {
+        if (!canvasSupported()) {
+            return false;
+        }
+        var dummy_canvas = document.createElement('canvas');
+        var context = dummy_canvas.getContext('2d');
+        return typeof context.fillText == 'function';
+    }
+
+    function css3TransitionSupported() {
+        var div = document.createElement('div');
+        return typeof div.style.MozTransition != 'undefined'    // Gecko
+            || typeof div.style.OTransition != 'undefined'      // Opera
+            || typeof div.style.webkitTransition != 'undefined' // WebKit
+            || typeof div.style.transition != 'undefined';
+    }
+
+
+    function AxisLabel(axisName, position, padding, plot, opts) {
+        this.axisName = axisName;
+        this.position = position;
+        this.padding = padding;
+        this.plot = plot;
+        this.opts = opts;
+        this.width = 0;
+        this.height = 0;
+    }
+
+    AxisLabel.prototype.cleanup = function() {
+    };
+
+
+    CanvasAxisLabel.prototype = new AxisLabel();
+    CanvasAxisLabel.prototype.constructor = CanvasAxisLabel;
+    function CanvasAxisLabel(axisName, position, padding, plot, opts) {
+        AxisLabel.prototype.constructor.call(this, axisName, position, padding,
+                                             plot, opts);
+    }
+
+    CanvasAxisLabel.prototype.calculateSize = function() {
+        if (!this.opts.axisLabelFontSizePixels)
+            this.opts.axisLabelFontSizePixels = 14;
+        if (!this.opts.axisLabelFontFamily)
+            this.opts.axisLabelFontFamily = 'sans-serif';
+
+        var textWidth = this.opts.axisLabelFontSizePixels + this.padding;
+        var textHeight = this.opts.axisLabelFontSizePixels + this.padding;
+        if (this.position == 'left' || this.position == 'right') {
+            this.width = this.opts.axisLabelFontSizePixels + this.padding;
+            this.height = 0;
+        } else {
+            this.width = 0;
+            this.height = this.opts.axisLabelFontSizePixels + this.padding;
+        }
+    };
+
+    CanvasAxisLabel.prototype.draw = function(box) {
+        if (!this.opts.axisLabelColour)
+            this.opts.axisLabelColour = 'black';
+        var ctx = this.plot.getCanvas().getContext('2d');
+        ctx.save();
+        ctx.font = this.opts.axisLabelFontSizePixels + 'px ' +
+            this.opts.axisLabelFontFamily;
+        ctx.fillStyle = this.opts.axisLabelColour;
+        var width = ctx.measureText(this.opts.axisLabel).width;
+        var height = this.opts.axisLabelFontSizePixels;
+        var x, y, angle = 0;
+        if (this.position == 'top') {
+            x = box.left + box.width/2 - width/2;
+            y = box.top + height*0.72;
+        } else if (this.position == 'bottom') {
+            x = box.left + box.width/2 - width/2;
+            y = box.top + box.height - height*0.72;
+        } else if (this.position == 'left') {
+            x = box.left + height*0.72;
+            y = box.height/2 + box.top + width/2;
+            angle = -Math.PI/2;
+        } else if (this.position == 'right') {
+            x = box.left + box.width - height*0.72;
+            y = box.height/2 + box.top - width/2;
+            angle = Math.PI/2;
+        }
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillText(this.opts.axisLabel, 0, 0);
+        ctx.restore();
+    };
+
+
+    HtmlAxisLabel.prototype = new AxisLabel();
+    HtmlAxisLabel.prototype.constructor = HtmlAxisLabel;
+    function HtmlAxisLabel(axisName, position, padding, plot, opts) {
+        AxisLabel.prototype.constructor.call(this, axisName, position,
+                                             padding, plot, opts);
+        this.elem = null;
+    }
+
+    HtmlAxisLabel.prototype.calculateSize = function() {
+        var elem = $('<div class="axisLabels" style="position:absolute;">' +
+                     this.opts.axisLabel + '</div>');
+        this.plot.getPlaceholder().append(elem);
+        // store height and width of label itself, for use in draw()
+        this.labelWidth = elem.outerWidth(true);
+        this.labelHeight = elem.outerHeight(true);
+        elem.remove();
+
+        this.width = this.height = 0;
+        if (this.position == 'left' || this.position == 'right') {
+            this.width = this.labelWidth + this.padding;
+        } else {
+            this.height = this.labelHeight + this.padding;
+        }
+    };
+
+    HtmlAxisLabel.prototype.cleanup = function() {
+        if (this.elem) {
+            this.elem.remove();
+        }
+    };
+
+    HtmlAxisLabel.prototype.draw = function(box) {
+        this.plot.getPlaceholder().find('#' + this.axisName + 'Label').remove();
+        this.elem = $('<div id="' + this.axisName +
+                      'Label" " class="axisLabels" style="position:absolute;">'
+                      + this.opts.axisLabel + '</div>');
+        this.plot.getPlaceholder().append(this.elem);
+        if (this.position == 'top') {
+            this.elem.css('left', box.left + box.width/2 - this.labelWidth/2 +
+                          'px');
+            this.elem.css('top', box.top + 'px');
+        } else if (this.position == 'bottom') {
+            this.elem.css('left', box.left + box.width/2 - this.labelWidth/2 +
+                          'px');
+            this.elem.css('top', box.top + box.height - this.labelHeight +
+                          'px');
+        } else if (this.position == 'left') {
+            this.elem.css('top', box.top + box.height/2 - this.labelHeight/2 +
+                          'px');
+            this.elem.css('left', box.left + 'px');
+        } else if (this.position == 'right') {
+            this.elem.css('top', box.top + box.height/2 - this.labelHeight/2 +
+                          'px');
+            this.elem.css('left', box.left + box.width - this.labelWidth +
+                          'px');
+        }
+    };
+
+
+    CssTransformAxisLabel.prototype = new HtmlAxisLabel();
+    CssTransformAxisLabel.prototype.constructor = CssTransformAxisLabel;
+    function CssTransformAxisLabel(axisName, position, padding, plot, opts) {
+        HtmlAxisLabel.prototype.constructor.call(this, axisName, position,
+                                                 padding, plot, opts);
+    }
+
+    CssTransformAxisLabel.prototype.calculateSize = function() {
+        HtmlAxisLabel.prototype.calculateSize.call(this);
+        this.width = this.height = 0;
+        if (this.position == 'left' || this.position == 'right') {
+            this.width = this.labelHeight + this.padding;
+        } else {
+            this.height = this.labelHeight + this.padding;
+        }
+    };
+
+    CssTransformAxisLabel.prototype.transforms = function(degrees, x, y) {
+        var stransforms = {
+            '-moz-transform': '',
+            '-webkit-transform': '',
+            '-o-transform': '',
+            '-ms-transform': ''
+        };
+        if (x != 0 || y != 0) {
+            var stdTranslate = ' translate(' + x + 'px, ' + y + 'px)';
+            stransforms['-moz-transform'] += stdTranslate;
+            stransforms['-webkit-transform'] += stdTranslate;
+            stransforms['-o-transform'] += stdTranslate;
+            stransforms['-ms-transform'] += stdTranslate;
+        }
+        if (degrees != 0) {
+            var rotation = degrees / 90;
+            var stdRotate = ' rotate(' + degrees + 'deg)';
+            stransforms['-moz-transform'] += stdRotate;
+            stransforms['-webkit-transform'] += stdRotate;
+            stransforms['-o-transform'] += stdRotate;
+            stransforms['-ms-transform'] += stdRotate;
+        }
+        var s = 'top: 0; left: 0; ';
+        for (var prop in stransforms) {
+            if (stransforms[prop]) {
+                s += prop + ':' + stransforms[prop] + ';';
+            }
+        }
+        s += ';';
+        return s;
+    };
+
+    CssTransformAxisLabel.prototype.calculateOffsets = function(box) {
+        var offsets = { x: 0, y: 0, degrees: 0 };
+        if (this.position == 'bottom') {
+            offsets.x = box.left + box.width/2 - this.labelWidth/2;
+            offsets.y = box.top + box.height - this.labelHeight;
+        } else if (this.position == 'top') {
+            offsets.x = box.left + box.width/2 - this.labelWidth/2;
+            offsets.y = box.top;
+        } else if (this.position == 'left') {
+            offsets.degrees = -90;
+            offsets.x = box.left - this.labelWidth/2 + this.labelHeight/2;
+            offsets.y = box.height/2 + box.top;
+        } else if (this.position == 'right') {
+            offsets.degrees = 90;
+            offsets.x = box.left + box.width - this.labelWidth/2
+                        - this.labelHeight/2;
+            offsets.y = box.height/2 + box.top;
+        }
+        offsets.x = Math.round(offsets.x);
+        offsets.y = Math.round(offsets.y);
+
+        return offsets;
+    };
+
+    CssTransformAxisLabel.prototype.draw = function(box) {
+        this.plot.getPlaceholder().find("." + this.axisName + "Label").remove();
+        var offsets = this.calculateOffsets(box);
+        this.elem = $('<div class="axisLabels ' + this.axisName +
+                      'Label" style="position:absolute; ' +
+                      this.transforms(offsets.degrees, offsets.x, offsets.y) +
+                      '">' + this.opts.axisLabel + '</div>');
+        this.plot.getPlaceholder().append(this.elem);
+    };
+
+
+    IeTransformAxisLabel.prototype = new CssTransformAxisLabel();
+    IeTransformAxisLabel.prototype.constructor = IeTransformAxisLabel;
+    function IeTransformAxisLabel(axisName, position, padding, plot, opts) {
+        CssTransformAxisLabel.prototype.constructor.call(this, axisName,
+                                                         position, padding,
+                                                         plot, opts);
+        this.requiresResize = false;
+    }
+
+    IeTransformAxisLabel.prototype.transforms = function(degrees, x, y) {
+        // I didn't feel like learning the crazy Matrix stuff, so this uses
+        // a combination of the rotation transform and CSS positioning.
+        var s = '';
+        if (degrees != 0) {
+            var rotation = degrees/90;
+            while (rotation < 0) {
+                rotation += 4;
+            }
+            s += ' filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=' + rotation + '); ';
+            // see below
+            this.requiresResize = (this.position == 'right');
+        }
+        if (x != 0) {
+            s += 'left: ' + x + 'px; ';
+        }
+        if (y != 0) {
+            s += 'top: ' + y + 'px; ';
+        }
+        return s;
+    };
+
+    IeTransformAxisLabel.prototype.calculateOffsets = function(box) {
+        var offsets = CssTransformAxisLabel.prototype.calculateOffsets.call(
+                          this, box);
+        // adjust some values to take into account differences between
+        // CSS and IE rotations.
+        if (this.position == 'top') {
+            // FIXME: not sure why, but placing this exactly at the top causes
+            // the top axis label to flip to the bottom...
+            offsets.y = box.top + 1;
+        } else if (this.position == 'left') {
+            offsets.x = box.left;
+            offsets.y = box.height/2 + box.top - this.labelWidth/2;
+        } else if (this.position == 'right') {
+            offsets.x = box.left + box.width - this.labelHeight;
+            offsets.y = box.height/2 + box.top - this.labelWidth/2;
+        }
+        return offsets;
+    };
+
+    IeTransformAxisLabel.prototype.draw = function(box) {
+        CssTransformAxisLabel.prototype.draw.call(this, box);
+        if (this.requiresResize) {
+            this.elem = this.plot.getPlaceholder().find("." + this.axisName +
+                                                        "Label");
+            // Since we used CSS positioning instead of transforms for
+            // translating the element, and since the positioning is done
+            // before any rotations, we have to reset the width and height
+            // in case the browser wrapped the text (specifically for the
+            // y2axis).
+            this.elem.css('width', this.labelWidth);
+            this.elem.css('height', this.labelHeight);
+        }
+    };
+
+
+    function init(plot) {
+        plot.hooks.processOptions.push(function (plot, options) {
+
+            if (!options.axisLabels.show)
+                return;
+
+            // This is kind of a hack. There are no hooks in Flot between
+            // the creation and measuring of the ticks (setTicks, measureTickLabels
+            // in setupGrid() ) and the drawing of the ticks and plot box
+            // (insertAxisLabels in setupGrid() ).
+            //
+            // Therefore, we use a trick where we run the draw routine twice:
+            // the first time to get the tick measurements, so that we can change
+            // them, and then have it draw it again.
+            var secondPass = false;
+
+            var axisLabels = {};
+            var axisOffsetCounts = { left: 0, right: 0, top: 0, bottom: 0 };
+
+            var defaultPadding = 2;  // padding between axis and tick labels
+            plot.hooks.draw.push(function (plot, ctx) {
+                var hasAxisLabels = false;
+                if (!secondPass) {
+                    // MEASURE AND SET OPTIONS
+                    $.each(plot.getAxes(), function(axisName, axis) {
+                        var opts = axis.options // Flot 0.7
+                            || plot.getOptions()[axisName]; // Flot 0.6
+
+                        // Handle redraws initiated outside of this plug-in.
+                        if (axisName in axisLabels) {
+                            axis.labelHeight = axis.labelHeight -
+                                axisLabels[axisName].height;
+                            axis.labelWidth = axis.labelWidth -
+                                axisLabels[axisName].width;
+                            opts.labelHeight = axis.labelHeight;
+                            opts.labelWidth = axis.labelWidth;
+                            axisLabels[axisName].cleanup();
+                            delete axisLabels[axisName];
+                        }
+
+                        if (!opts || !opts.axisLabel || !axis.show)
+                            return;
+
+                        hasAxisLabels = true;
+                        var renderer = null;
+
+                        if (!opts.axisLabelUseHtml &&
+                            navigator.appName == 'Microsoft Internet Explorer') {
+                            var ua = navigator.userAgent;
+                            var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+                            if (re.exec(ua) != null) {
+                                rv = parseFloat(RegExp.$1);
+                            }
+                            if (rv >= 9 && !opts.axisLabelUseCanvas && !opts.axisLabelUseHtml) {
+                                renderer = CssTransformAxisLabel;
+                            } else if (!opts.axisLabelUseCanvas && !opts.axisLabelUseHtml) {
+                                renderer = IeTransformAxisLabel;
+                            } else if (opts.axisLabelUseCanvas) {
+                                renderer = CanvasAxisLabel;
+                            } else {
+                                renderer = HtmlAxisLabel;
+                            }
+                        } else {
+                            if (opts.axisLabelUseHtml || (!css3TransitionSupported() && !canvasTextSupported()) && !opts.axisLabelUseCanvas) {
+                                renderer = HtmlAxisLabel;
+                            } else if (opts.axisLabelUseCanvas || !css3TransitionSupported()) {
+                                renderer = CanvasAxisLabel;
+                            } else {
+                                renderer = CssTransformAxisLabel;
+                            }
+                        }
+
+                        var padding = opts.axisLabelPadding === undefined ?
+                                      defaultPadding : opts.axisLabelPadding;
+
+                        axisLabels[axisName] = new renderer(axisName,
+                                                            axis.position, padding,
+                                                            plot, opts);
+
+                        // flot interprets axis.labelHeight and .labelWidth as
+                        // the height and width of the tick labels. We increase
+                        // these values to make room for the axis label and
+                        // padding.
+
+                        axisLabels[axisName].calculateSize();
+
+                        // AxisLabel.height and .width are the size of the
+                        // axis label and padding.
+                        // Just set opts here because axis will be sorted out on
+                        // the redraw.
+
+                        opts.labelHeight = axis.labelHeight +
+                            axisLabels[axisName].height;
+                        opts.labelWidth = axis.labelWidth +
+                            axisLabels[axisName].width;
+                    });
+
+                    // If there are axis labels, re-draw with new label widths and
+                    // heights.
+
+                    if (hasAxisLabels) {
+                        secondPass = true;
+                        plot.setupGrid();
+                        plot.draw();
+                    }
+                } else {
+                    secondPass = false;
+                    // DRAW
+                    $.each(plot.getAxes(), function(axisName, axis) {
+                        var opts = axis.options // Flot 0.7
+                            || plot.getOptions()[axisName]; // Flot 0.6
+                        if (!opts || !opts.axisLabel || !axis.show)
+                            return;
+
+                        axisLabels[axisName].draw(axis.box);
+                    });
+                }
+            });
+        });
+    }
+
+
+    $.plot.plugins.push({
+        init: init,
+        options: options,
+        name: 'axisLabels',
+        version: '2.0'
+    });
+})(jQuery);
+
+}).call(global, module, undefined, undefined);
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{"/Users/jameshill/Repositories/AngularJS/diabetic-analytics/node_modules/jquery/dist/jquery.min.js":34,"flot":33}],33:[function(require,module,exports){
 /* Javascript plotting library for jQuery, version 0.8.3.
 
 Copyright (c) 2007-2014 IOLA and Ole Laursen.
@@ -40228,7 +41236,7 @@ Licensed under the MIT license.
 
 })(jQuery);
 
-},{}],32:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (global){
 ; var __browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
 /*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */
@@ -40242,7 +41250,7 @@ void 0===c?d&&"get"in d&&null!==(e=d.get(a,b))?e:(e=n.find.attr(a,b),null==e?voi
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -52598,7 +53606,7 @@ void 0===c?d&&"get"in d&&null!==(e=d.get(a,b))?e:(e=n.find.attr(a,b),null==e?voi
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],34:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /*!
 	Papa Parse
 	v4.1.2

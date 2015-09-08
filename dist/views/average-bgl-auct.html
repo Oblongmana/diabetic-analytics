@@ -7,7 +7,11 @@
       <div class="panel-heading">
         <h4>Average Blood Glucose ( <em>AUC<sub>t</sub></em> )</h4>
       </div>
-        <flot class="panel-body" dataset="auctChart" options="auctChartOptions" width="100%" height="300px" ></flot>
+      <div class="panel-body" >
+        <em ng-if="!chartReady">No data has been imported. Please use the <a ui-sref="import">Import Data</a> page</em>
+        <em ng-if="bglEntriesRetrievalError">{{bglEntriesRetrievalError}}</em>
+        <flot ng-if="chartReady" class="auct-chart" dataset="auctChartData" options="auctChartOptions" width="100%" height="300px" ></flot>
+      </div>
     </div>
   </div>
 </div>

@@ -3,6 +3,8 @@ require('bootstrap');
 require('angular');
 require('flot');
 require('flot-resize');
+require('flot-time');
+require('flot-axislabels');
 require('lodash');
 require('./mixins');
 require('./app.js');

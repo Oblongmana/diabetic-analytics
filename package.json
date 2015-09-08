@@ -51,7 +51,9 @@
     "jquery": "./node_modules/jquery/dist/jquery.min.js",
     "angular-file": "./node_modules/angular-file/src/angular-file.js",
     "angular-flot": "./node_modules/angular-flot/angular-flot.js",
-    "flot-resize": "./node_modules/Flot/jquery.flot.resize.js"
+    "flot-resize": "./node_modules/Flot/jquery.flot.resize.js",
+    "flot-time": "./node_modules/Flot/jquery.flot.time.js",
+    "flot-axislabels": "./node_modules/flot-axislabels/jquery.flot.axislabels.js"
   },
   "browserify-shim": {
     "jquery": "$",
@@ -67,6 +69,18 @@
       "exports": "flot"
     },
     "flot-resize": {
+      "depends": [
+        "jquery:$",
+        "flot"
+      ]
+    },
+    "flot-time": {
+      "depends": [
+        "jquery:$",
+        "flot"
+      ]
+    },
+    "flot-axislabels": {
       "depends": [
         "jquery:$",
         "flot"
@@ -104,7 +118,8 @@
     "papaparse": "^4.1.2"
   },
   "napa": {
-    "angular-file": "git+https://github.com/radify/angular-file#v0.1.1"
+    "angular-file": "git+https://github.com/radify/angular-file#v0.1.1",
+    "flot-axislabels": "git+https://github.com/markrcote/flot-axislabels#a181e09"
   },
   "devDependencies": {
     "browserify": "^11.0.1",
@@ -115,7 +130,6 @@
     "gulp-sourcemaps": "^1.5.2",
     "gulp-util": "^3.0.6",
     "gulp-watch": "^4.3.5",
-    "lodash": "^3.10.1",
     "lodash.assign": "^3.2.0",
     "napa": "^1.2.0",
     "vinyl-buffer": "^1.0.0",
