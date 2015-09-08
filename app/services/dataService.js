@@ -39,12 +39,19 @@
               ? importedDataResult.data
               : _.drop(importedDataResult.data,1);
 
-            deferred.resolve(_.map(returnData,function(dataRow){
-              var retDataRow = {};
-              retDataRow[ParsingService.Fields.DateTime] = dataRow[selectedParser.config.columnMappings.DateTime];
-              retDataRow[ParsingService.Fields.BGL_mmol_L] = dataRow[selectedParser.config.columnMappings.BGL_mmol_L];
-              return retDataRow;
-            }));
+            deferred.resolve(
+              _(returnData)
+              .filter(function(dataRow){
+                return dataRow[selectedParser.config.columnMappings.BGL_mmol_L] !== "";
+              })
+              .map(function(dataRow){
+                var retDataRow = {};
+                retDataRow[ParsingService.Fields.DateTime] = dataRow[selectedParser.config.columnMappings.DateTime];
+                retDataRow[ParsingService.Fields.BGL_mmol_L] = dataRow[selectedParser.config.columnMappings.BGL_mmol_L];
+                return retDataRow;
+              })
+              .value()
+            );
           }
           return deferred.promise;
         }

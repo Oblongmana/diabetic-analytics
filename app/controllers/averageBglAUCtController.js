@@ -35,17 +35,12 @@
         if ($scope.bglEntries) {
           $scope.bglAreaDataSeries = { 
             // data: [[(new Date()).getTime(),5]],
-            data: _($scope.bglEntries)
-              .filter(function(bglEntry){
-                return bglEntry[DataService.Fields.BGL_mmol_L] !== "";
-              })
-              .map(function(bglEntry){
-                return [
-                  Date.parse(bglEntry[DataService.Fields.DateTime]),
-                  bglEntry[DataService.Fields.BGL_mmol_L]
-                ];
-              })
-              .value(),
+            data: _.map($scope.bglEntries,function(bglEntry){
+              return [
+                Date.parse(bglEntry[DataService.Fields.DateTime]),
+                bglEntry[DataService.Fields.BGL_mmol_L]
+              ];
+            }),
             label: 'BGL (mmol/L)',
             lines: {
               show: true,

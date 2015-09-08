@@ -107,17 +107,12 @@
         if ($scope.bglEntries) {
           $scope.bglAreaDataSeries = { 
             // data: [[(new Date()).getTime(),5]],
-            data: _($scope.bglEntries)
-              .filter(function(bglEntry){
-                return bglEntry[DataService.Fields.BGL_mmol_L] !== "";
-              })
-              .map(function(bglEntry){
-                return [
-                  Date.parse(bglEntry[DataService.Fields.DateTime]),
-                  bglEntry[DataService.Fields.BGL_mmol_L]
-                ];
-              })
-              .value(),
+            data: _.map($scope.bglEntries,function(bglEntry){
+              return [
+                Date.parse(bglEntry[DataService.Fields.DateTime]),
+                bglEntry[DataService.Fields.BGL_mmol_L]
+              ];
+            }),
             label: 'BGL (mmol/L)',
             lines: {
               show: true,
@@ -281,12 +276,19 @@ require('./app.js');
               ? importedDataResult.data
               : _.drop(importedDataResult.data,1);
 
-            deferred.resolve(_.map(returnData,function(dataRow){
-              var retDataRow = {};
-              retDataRow[ParsingService.Fields.DateTime] = dataRow[selectedParser.config.columnMappings.DateTime];
-              retDataRow[ParsingService.Fields.BGL_mmol_L] = dataRow[selectedParser.config.columnMappings.BGL_mmol_L];
-              return retDataRow;
-            }));
+            deferred.resolve(
+              _(returnData)
+              .filter(function(dataRow){
+                return dataRow[selectedParser.config.columnMappings.BGL_mmol_L] !== "";
+              })
+              .map(function(dataRow){
+                var retDataRow = {};
+                retDataRow[ParsingService.Fields.DateTime] = dataRow[selectedParser.config.columnMappings.DateTime];
+                retDataRow[ParsingService.Fields.BGL_mmol_L] = dataRow[selectedParser.config.columnMappings.BGL_mmol_L];
+                return retDataRow;
+              })
+              .value()
+            );
           }
           return deferred.promise;
         }
