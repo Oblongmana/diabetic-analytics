@@ -1,9 +1,5 @@
 require('jquery');
 require('bootstrap');
 require('angular');
-require('flot');
-require('flot-resize');
-require('flot-time');
-require('flot-axislabels');
 require('./mixins');
 require('./app.js');

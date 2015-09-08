@@ -10,7 +10,7 @@
       <div class="panel-body" >
         <em ng-if="!chartReady">No data has been imported. Please use the <a ui-sref="import">Import Data</a> page</em>
         <em ng-if="bglEntriesRetrievalError">{{bglEntriesRetrievalError}}</em>
-        <flot ng-if="chartReady" class="auct-chart" dataset="auctChartData" options="auctChartOptions" width="100%" height="300px" ></flot>
+        <flot callback="doTheThing" ng-if="chartReady" class="auct-chart" dataset="auctChartData" options="auctChartOptions" width="100%" height="300px" ></flot>
       </div>
     </div>
   </div>

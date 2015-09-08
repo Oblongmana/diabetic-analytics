@@ -3,6 +3,7 @@
 
   var angular = require('angular');
   var _ = require('lodash');
+  var moment = require('moment');
   var papaparse = require('papaparse');
 
   /**
@@ -103,7 +104,7 @@
        * @type {Object}
        */
       var REQUIRED_DATA = {
-        DateTime: 'DateTime',
+        DateTime: 'DateTime', //Note that this should be in Milliseconds since the epoch
         BGL_mmol_L: 'BGL_mmol_L'
       };
 
@@ -145,8 +146,8 @@
             undefined,
             function(resultObject) {
               //This post-parse function merges the contents of the 
-              // "Date" and "Time" fields into "DateTime" - containing a string
-              // that can be parsed as a js date
+              // "Date" and "Time" fields into "DateTime" - containing ms since
+              // the epoch
               var srcDateIndex = 0;
               var srcTimeIndex = 1;
               var outDateTimeIndex = 0;
@@ -155,10 +156,12 @@
               _.pullAt(headers,srcDateIndex,srcTimeIndex); //Remove date & time headers
               _.insert(headers,outDateTimeIndex,"DateTime"); //Add DateTime header at outDateTimeIndex
 
-              // resultObject.data = resultObject.data[0] + 
               var data = _(resultObject.data).drop(1).map(function(dataRow) {
-                var dateTimeStr = "\""+_(dataRow).pullAt(srcDateIndex,srcTimeIndex).join(" ")+"\"";
-                _.insert(dataRow,outDateTimeIndex,dateTimeStr); //Add DateTime value at outDateTimeIndex
+                var dateTimeMS = moment(
+                  _(dataRow).pullAt(srcDateIndex,srcTimeIndex).join(" "),
+                  "MMM D, YYYY h:mm:ss a"
+                ); //Convert date + time to ms since the epoch
+                _.insert(dataRow,outDateTimeIndex,dateTimeMS); //Add DateTime value at outDateTimeIndex
                 return dataRow;
               }).value();
 
