@@ -7,12 +7,15 @@
   var papaparse = require('papaparse');
 
   /**
-   * TODO: Update this doc to reflect changed approach - actually providing 
+   * TODO: Update this doc to reflect changed approach - actually providing
    * a parser, with manipulatable config and pre/post functions
-   * 
+   *
    * ParsingService provides parsing for various formats
    * of Blood Glucose logging CSV files into javascript objects using the
    * PapaParse library.
+   *
+   * NOTE: all entries should be sorted into ascending order
+   * TODO: should that be checked somehow?
    *
    * XXXXXXXXXXX
    *  It is the responsbility of anyone using this service to provide their own
@@ -20,7 +23,7 @@
    *  callback)
    * XXXXXXXXXXX
    *
-   * TODO: Actually - we should probably instead return a promise from some 
+   * TODO: Actually - we should probably instead return a promise from some
    * function ourselves - allowing us to do post-transforms,
    * and verify input columns matched expected columns
    *
@@ -28,11 +31,11 @@
    *   - configObject: a PapaParse config object, with no event handling callbacks
    *   - opt_preParseTransform: optionally, may transform the File object before
    *      the parsing occurs - must return a File Object (optionally in a promise)
-   *   - opt_postParseTransform: optionally, may transform the PapaParse.Results 
-   *      object after the PapaParse parsing occurs - must return a 
-   *      PapaParse.Results Object (optionally in a promise) - this would 
+   *   - opt_postParseTransform: optionally, may transform the PapaParse.Results
+   *      object after the PapaParse parsing occurs - must return a
+   *      PapaParse.Results Object (optionally in a promise) - this would
    *      generally be used for things like merging columns
-   * 
+   *
    *
    * Each strategy also exposes a "columnMappings" field. This is a mapping from
    * the data fields that the DiabeticAnalytics app requires, to the equivalent
@@ -44,9 +47,9 @@
    *
    * TODO: Probably somehow flag the choices between units - mmol/L vs mg/dL,
    * kg vs lb, carb units vs grams vs exchanges vs goodness knows what else, etc
-   * 
-   * So for a full example, here's how you might parse a mySugr file into a 
-   * javascript object, and then log the Blood Glucose Measurement of the 
+   *
+   * So for a full example, here's how you might parse a mySugr file into a
+   * javascript object, and then log the Blood Glucose Measurement of the
    * first data row of the file:
    *
    *   var mySugrParser = ParsingService.mySugr();
@@ -56,7 +59,7 @@
    *     console.log('BGL (mmol/L): ' + result.data[1][mySugrColumnMappings.BGL_mmol_L]);
    *   });
    *
-   * Note that these strategies should not touch any of the callbacks (at least 
+   * Note that these strategies should not touch any of the callbacks (at least
    * for now), restricting themselves instead to just config (and preprocessing
    * in future)
    */
@@ -67,7 +70,7 @@
       $q
       ) {
 
-      
+
       var Parser = function(configObject,opt_preParseTransform,opt_postParseTransform) {
         this.config = configObject;
         var resultDeferred = $q.defer();
@@ -83,7 +86,7 @@
       };
       Parser.prototype.parse = function(fileObject) {
         var self = this;
-        var pPreParseTransform = this.opt_preParseTransform 
+        var pPreParseTransform = this.opt_preParseTransform
           ? $q.when(this.opt_preParseTransform(fileObject))
           : $q.when(fileObject);
         var pPapaParse = pPreParseTransform.then(function(preParsedFileObject){
@@ -99,7 +102,7 @@
       };
 
       /**
-       * This is the data that all parsers must supply, and expose access 
+       * This is the data that all parsers must supply, and expose access
        * information for under the `config.columnMappings` field
        * @type {Object}
        */
@@ -111,17 +114,17 @@
       var PARSERS = {
         /**
          * Config for the mySugr (https://mysugr.com/) app. This config setup
-         * forces comma delimiter, has dynamic typing, has row data indexed by 
-         * numeric index rather than by header (so you'll need to ignore line 
+         * forces comma delimiter, has dynamic typing, has row data indexed by
+         * numeric index rather than by header (so you'll need to ignore line
          * one), and skips empty lines.
          *
          * For full details compare the source code to the list of options at
          * http://papaparse.com/docs#config
          *
          * TODO: Should probably provide some methodology for verifying received
-         * columns match expected columns. Probably a simple substring search 
+         * columns match expected columns. Probably a simple substring search
          * type thing
-         * 
+         *
          * @type {Function}
          */
         mySugr: function() {
@@ -145,9 +148,12 @@
             },
             undefined,
             function(resultObject) {
-              //This post-parse function merges the contents of the 
+              //This post-parse function merges the contents of the
               // "Date" and "Time" fields into "DateTime" - containing ms since
               // the epoch
+              //
+              //We then reverse the order of the entries (as mySugr provides
+              // them in descending order)
               var srcDateIndex = 0;
               var srcTimeIndex = 1;
               var outDateTimeIndex = 0;
@@ -160,10 +166,13 @@
                 var dateTimeMS = moment(
                   _(dataRow).pullAt(srcDateIndex,srcTimeIndex).join(" "),
                   "MMM D, YYYY h:mm:ss a"
-                ); //Convert date + time to ms since the epoch
+                ).valueOf(); //Convert date + time to ms since the epoch
                 _.insert(dataRow,outDateTimeIndex,dateTimeMS); //Add DateTime value at outDateTimeIndex
                 return dataRow;
               }).value();
+
+              //Switch from descending order to ascending order
+              data.reverse();
 
               resultObject.data = [headers].concat(data);
               return resultObject;
@@ -175,6 +184,6 @@
       return {
         Parsers: PARSERS,
         Fields: REQUIRED_DATA
-      };    
+      };
     }]);
 }());
