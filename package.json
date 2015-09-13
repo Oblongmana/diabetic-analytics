@@ -25,9 +25,6 @@
   "//": [
     "COMMENTS - PLEASE READ IF DOING ANYTHING IN PACKAGE.JSON",
     "",
-    "Note that the flot lib appears to not be very actively maintained, and the ",
-    " package.json is out of date - hence we have specified the repo and tag",
-    "",
     "See https://github.com/thlorenz/browserify-shim/wiki/browserify-shim-recipes",
     " for further browserify recipes",
     "",
@@ -38,9 +35,7 @@
     " other libs expect BOTH and behave badly. browserify-shim doesn't allow ",
     " sensible multiple exports, so jquery is manually added to browser in the ",
     " browser section below. This is HORRIBLE to get working :/ ",
-    "",
-    "Note that angular-flot must be included in 'browser', as not CommonJS",
-    " compatible, likewise for angular-file"
+    ""
   ],
   "browserify": {
     "transform": [
@@ -49,11 +44,7 @@
   },
   "browser": {
     "jquery": "./node_modules/jquery/dist/jquery.min.js",
-    "angular-file": "./node_modules/angular-file/src/angular-file.js",
-    "angular-flot": "./node_modules/angular-flot/angular-flot.js",
-    "flot-resize": "./node_modules/Flot/jquery.flot.resize.js",
-    "flot-time": "./node_modules/Flot/jquery.flot.time.js",
-    "flot-axislabels": "./node_modules/flot-axislabels/jquery.flot.axislabels.js"
+    "angular-file": "./node_modules/angular-file/src/angular-file.js"
   },
   "browserify-shim": {
     "jquery": "$",
@@ -62,41 +53,10 @@
         "jquery:$"
       ]
     },
-    "flot": {
-      "depends": [
-        "jquery:$"
-      ],
-      "exports": "flot"
-    },
-    "flot-resize": {
-      "depends": [
-        "jquery:$",
-        "flot"
-      ]
-    },
-    "flot-time": {
-      "depends": [
-        "jquery:$",
-        "flot"
-      ]
-    },
-    "flot-axislabels": {
-      "depends": [
-        "jquery:$",
-        "flot"
-      ]
-    },
     "papaparse": {
       "depends": [
         "jquery:$"
       ]
-    },
-    "angular-flot": {
-      "depends": [
-        "jquery:$",
-        "angular"
-      ],
-      "exports": "angular.module('angular-flot').name"
     },
     "angular-file": {
       "depends": [
@@ -107,12 +67,10 @@
   },
   "dependencies": {
     "angular": "^1.4.5",
-    "angular-flot": "0.0.10",
     "angular-resource": "^1.4.5",
     "angular-ui-router": "^0.2.15",
     "bootstrap": "^3.3.5",
     "d3": "^3.5.6",
-    "flot": "flot/flot#v0.8.3",
     "font-awesome": "^4.4.0",
     "jquery": "^2.1.4",
     "lodash": "^3.10.1",
@@ -120,8 +78,7 @@
     "papaparse": "^4.1.2"
   },
   "napa": {
-    "angular-file": "git+https://github.com/radify/angular-file#v0.1.1",
-    "flot-axislabels": "git+https://github.com/markrcote/flot-axislabels#a181e09"
+    "angular-file": "git+https://github.com/radify/angular-file#v0.1.1"
   },
   "devDependencies": {
     "browserify": "^11.0.1",

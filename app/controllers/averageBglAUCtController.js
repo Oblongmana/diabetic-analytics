@@ -4,10 +4,6 @@
   var angular = require('angular');
   var _ = require('lodash');
   var moment = require('moment');
-  require('flot');
-  require('flot-resize');
-  require('flot-time');
-  require('flot-axislabels');
 
   angular.module('diabeticAnalytics').controller('averageBglAUCtController',
     [
