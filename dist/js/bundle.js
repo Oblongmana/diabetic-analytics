@@ -101,7 +101,6 @@
       if (DataService.hasData()) {
         DataService.getBglEntries().then(
           function(bglEntries){
-            console.log('REVERSED:',bglEntries);
             $scope.bglEntries = bglEntries;
             $scope.bglEntriesRetrievalError = null;
           },
@@ -298,7 +297,11 @@ require('./averageBglAUCtController');
             var dataPointLeft = $scope.bglEntries[dataPointIndex-1];
             var dataPointRight = $scope.bglEntries[dataPointIndex];
             var datetimeToHighlight;
-            if ( (xCoordAsDatetime - dataPointLeft[$scope.datetimeAccessor])
+            if (!dataPointRight) {
+              datetimeToHighlight = dataPointLeft;
+            } else if (!dataPointLeft) {
+              datetimeToHighlight = dataPointRight;
+            } else if ( (xCoordAsDatetime - dataPointLeft[$scope.datetimeAccessor])
                   > (dataPointRight[$scope.datetimeAccessor] - xCoordAsDatetime)) {
               datetimeToHighlight = dataPointRight;
             } else {

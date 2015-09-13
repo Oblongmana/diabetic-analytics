@@ -29,7 +29,6 @@
       if (DataService.hasData()) {
         DataService.getBglEntries().then(
           function(bglEntries){
-            console.log('REVERSED:',bglEntries);
             $scope.bglEntries = bglEntries;
             $scope.bglEntriesRetrievalError = null;
           },
