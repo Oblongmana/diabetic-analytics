@@ -57,3 +57,28 @@ footer {
 .axisLabels {
     font-size: 12px;
 }
+
+auct-series .axis path,
+auct-series .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+auct-series .bgl-line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+auct-series .data-point {
+    fill: white;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+auct-series .highlight-point {
+    fill: orange;
+    stroke: orange;
+    stroke-width: 1.5px;
+}

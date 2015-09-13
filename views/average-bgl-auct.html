@@ -8,9 +8,15 @@
         <h4>Average Blood Glucose ( <em>AUC<sub>t</sub></em> )</h4>
       </div>
       <div class="panel-body" >
-        <em ng-if="!chartReady">No data has been imported. Please use the <a ui-sref="import">Import Data</a> page</em>
+        <em ng-if="!bglEntries">No data has been imported. Please use the <a ui-sref="import">Import Data</a> page</em>
         <em ng-if="bglEntriesRetrievalError">{{bglEntriesRetrievalError}}</em>
-        <flot callback="doTheThing" ng-if="chartReady" class="auct-chart" dataset="auctChartData" options="auctChartOptions" width="100%" height="300px" ></flot>
+        <auct-series 
+            ng-if="bglEntries" 
+            bgl-entries="bglEntries" 
+            datetime-accessor="datetimeAccessor"
+            bgl-accessor="bglAccessor"
+          >
+        </auct-series>
       </div>
     </div>
   </div>

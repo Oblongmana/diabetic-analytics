@@ -12,6 +12,7 @@
 
   require('./controllers');
   require('./services');
+  require('./directives');
 
   angular.module('diabeticAnalytics').config(
     [
