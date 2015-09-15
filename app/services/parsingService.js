@@ -165,7 +165,14 @@
               var data = _(resultObject.data).drop(1).map(function(dataRow) {
                 var dateTimeMS = moment(
                   _(dataRow).pullAt(srcDateIndex,srcTimeIndex).join(" "),
-                  "MMM D, YYYY h:mm:ss a"
+                  [
+                    "MMM D, YYYY h:mm:ss a", //Format received (at least in NZ) before ~2015-09-15
+                    "DD/MM/YYYY h:mm:ss a", //Format received (at least in NZ) after ~2015-09-15
+                    "YYYY-MM-DD h:mm:ss a", //Alternative format (why can't we all do it this way)
+                    "MM/DD/YYYY h:mm:ss a", //Alternative format (American)
+                    "DD.MM.YYYY h:mm:ss a", //Alternative format (German)
+                    //Couldn't find any other formats in mySugr source code, and haven't received any others
+                  ]
                 ).valueOf(); //Convert date + time to ms since the epoch
                 _.insert(dataRow,outDateTimeIndex,dateTimeMS); //Add DateTime value at outDateTimeIndex
                 return dataRow;
