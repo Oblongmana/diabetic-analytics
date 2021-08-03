@@ -1,6 +1,10 @@
 AUCt Chart
- ✔ Make y label appear outside axiss @done (15-09-13 12:45)
- ✔ Rotate ticks @done (15-09-13 12:45)
- ✔ Get ticks 1 day apart @done (15-09-13 12:46)
- ☐ Work out what the deal is with months
- ☐ Make it resize with browser, and take 100% width of parent
+  ✔ Make y label appear outside axiss @done (15-09-13 12:45)
+  ✔ Rotate ticks @done (15-09-13 12:45)
+  ✔ Get ticks 1 day apart @done (15-09-13 12:46)
+  ☐ Work out what the deal is with months
+  ☐ Make it resize with browser, and take 100% width of parent
+
+General Project stuff:
+  ☐ Move to master, and build to dist folder
+  ☐ Set up CI to build dist to gh-pages
